@@ -26,7 +26,7 @@ const loadExtensionTranslation = async function (svgEditor) {
 
 export default {
   name,
-  async init () {
+  async init() {
     const svgEditor = this
     await loadExtensionTranslation(svgEditor)
     const {
@@ -38,8 +38,8 @@ export default {
     }
     return {
       name: svgEditor.i18next.t(`${name}:name`),
-      callback () {
-        const btitle = `${name} [Space / mouse wheel + drag]`
+      callback() {
+        const btitle = `Przesuwanie [Spacja / kółko myszki + przeciąganie]`
         // Add the button and its handler(s)
         const buttonTemplate = document.createElement('template')
         buttonTemplate.innerHTML = `
@@ -52,7 +52,7 @@ export default {
           }
         })
       },
-      mouseDown () {
+      mouseDown() {
         if (svgCanvas.getMode() === 'ext-panning') {
           svgEditor.setPanning(true)
           return {
@@ -61,7 +61,7 @@ export default {
         }
         return undefined
       },
-      mouseUp () {
+      mouseUp() {
         if (svgCanvas.getMode() === 'ext-panning') {
           svgEditor.setPanning(false)
           return {
