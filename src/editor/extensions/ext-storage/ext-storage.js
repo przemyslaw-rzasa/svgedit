@@ -61,7 +61,7 @@ const replaceStoragePrompt = val => {
 
 export default {
   name: 'storage',
-  init () {
+  init() {
     const svgEditor = this
     const { svgCanvas, storage } = svgEditor
 
@@ -96,7 +96,7 @@ export default {
       const cached = storage.getItem(key)
       if (cached) {
         svgEditor.loadFromString(cached)
-        const name = storage.getItem(`title-${key}`) ?? 'untitled.svg'
+        const name = storage.getItem(`title-${key}`) ?? 'bez_tytulu.svg'
         svgEditor.topPanel.updateTitle(name)
         svgEditor.layersPanel.populateLayers()
       }
@@ -180,6 +180,7 @@ export default {
      * @returns {void}
      */
     const setupBeforeUnloadListener = () => {
+      return;
       window.addEventListener('beforeunload', function () {
         // Don't save anything unless the user opted in to storage
         if (
@@ -222,7 +223,9 @@ export default {
     let loaded = false
     return {
       name: 'storage',
-      callback () {
+      callback() {
+        // Prevent from showing storage dialog
+        return;
         const storagePrompt = new URL(top.location).searchParams.get(
           'storagePrompt'
         )

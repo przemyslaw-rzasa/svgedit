@@ -48,7 +48,7 @@ class EditorStartup {
   /**
    *
    */
-  constructor (div) {
+  constructor(div) {
     this.extensionsAdded = false
     this.messageQueue = []
     this.$container = div ?? $id('svg_editor')
@@ -59,7 +59,7 @@ class EditorStartup {
   * @function module:SVGthis.init
   * @returns {void}
   */
-  async init () {
+  async init() {
     if ('localStorage' in window) {
       this.storage = window.localStorage
     }
@@ -409,7 +409,7 @@ class EditorStartup {
       })
     })
     // ref: https://stackoverflow.com/a/1038781
-    function getWidth () {
+    function getWidth() {
       return Math.max(
         document.body.scrollWidth,
         document.documentElement.scrollWidth,
@@ -419,7 +419,7 @@ class EditorStartup {
       )
     }
 
-    function getHeight () {
+    function getHeight() {
       return Math.max(
         document.body.scrollHeight,
         document.documentElement.scrollHeight,
@@ -604,14 +604,15 @@ class EditorStartup {
     }.bind(this))
 
     window.addEventListener('beforeunload', function (e) {
-    // Suppress warning if page is empty
+      return;
+      // Suppress warning if page is empty
       if (undoMgr.getUndoStackSize() === 0) {
         this.showSaveWarning = false
       }
 
       // showSaveWarning is set to 'false' when the page is saved.
       if (!this.configObj.curConfig.no_save_warning && this.showSaveWarning) {
-      // Browser already asks question about closing the page
+        // Browser already asks question about closing the page
         e.returnValue = this.i18next.t('notification.unsavedChanges') // Firefox needs this when beforeunload set by addEventListener (even though message is not used)
         return this.i18next.t('notification.unsavedChanges')
       }
@@ -646,7 +647,7 @@ class EditorStartup {
    * @fires module:svgcanvas.SvgCanvas#event:extensions_added
    * @returns {Promise<module:locale.LangAndData>} Resolves to result of {@link module:locale.readLang}
    */
-  async extAndLocaleFunc () {
+  async extAndLocaleFunc() {
     this.$svgEditor.style.visibility = 'visible'
     try {
       // load standard extensions
@@ -735,7 +736,7 @@ class EditorStartup {
  * Listens to the mode change, listener is to be added on document
 * @param {Event} evt custom modeChange event
 */
-  modeListener (evt) {
+  modeListener(evt) {
     const mode = this.svgCanvas.getMode()
 
     this.setCursorStyle(mode)
@@ -745,7 +746,7 @@ class EditorStartup {
    * sets cursor styling for workarea depending on the current mode
    * @param {string} mode
    */
-  setCursorStyle (mode) {
+  setCursorStyle(mode) {
     let cs = 'auto'
     switch (mode) {
       case 'ext-panning':
@@ -777,7 +778,7 @@ class EditorStartup {
   /**
    * Listens for Esc key to be pressed to cancel active mode, sets mode to Select
    */
-  cancelTool () {
+  cancelTool() {
     const mode = this.svgCanvas.getMode()
     // list of modes that are currently save to cancel
     const modesToCancel = ['zoom', 'rect', 'square', 'circle', 'ellipse', 'line', 'text', 'star', 'polygon', 'shapelib', 'image']
