@@ -1,5 +1,5 @@
 {
-  "name": "svgedit",
+  "name": "svgedit-pl",
   "version": "7.3.4",
   "description": "Powerful SVG-Editor for your browser ",
   "main": "dist/editor/Editor.js",
