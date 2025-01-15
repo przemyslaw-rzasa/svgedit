@@ -263,7 +263,6 @@ export default {
           const forceSavePreferencesLocally = true;
 
           if (forceSavePreferencesLocally) {
-            console.log('will dispatch', $storageDialog)
             $storageDialog.dispatchEvent(
               new CustomEvent(
                 'change',
