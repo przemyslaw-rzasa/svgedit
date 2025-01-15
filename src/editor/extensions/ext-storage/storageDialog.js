@@ -10,7 +10,7 @@ export class SeStorageDialog extends HTMLElement {
   /**
     * @function constructor
     */
-  constructor () {
+  constructor() {
     super()
     // create the shadowDom and insert the template
     this._shadowRoot = this.attachShadow({ mode: 'open' })
@@ -28,7 +28,7 @@ export class SeStorageDialog extends HTMLElement {
    * @param {any} name
    * @returns {void}
    */
-  init (i18next) {
+  init(i18next) {
     this.setAttribute('common-ok', i18next.t('common.ok'))
     this.setAttribute('common-cancel', i18next.t('common.cancel'))
     this.setAttribute('notify-editor_pref_msg', i18next.t('notification.editorPreferencesMsg'))
@@ -43,7 +43,7 @@ export class SeStorageDialog extends HTMLElement {
    * @function observedAttributes
    * @returns {any} observed
    */
-  static get observedAttributes () {
+  static get observedAttributes() {
     return ['dialog', 'storage', 'common-ok', 'common-cancel', 'notify-editor_pref_msg', 'properties-prefs_and_content', 'tools-remember_this_choice', 'tools-remember_this_choice_title', 'properties-prefs_only', 'properties-no_prefs_or_content']
   }
 
@@ -54,7 +54,7 @@ export class SeStorageDialog extends HTMLElement {
    * @param {string} newValue
    * @returns {void}
    */
-  attributeChangedCallback (name, oldValue, newValue) {
+  attributeChangedCallback(name, oldValue, newValue) {
     let node
     switch (name) {
       case 'dialog':
@@ -111,7 +111,7 @@ export class SeStorageDialog extends HTMLElement {
    * @function get
    * @returns {any}
    */
-  get dialog () {
+  get dialog() {
     return this.getAttribute('dialog')
   }
 
@@ -119,7 +119,7 @@ export class SeStorageDialog extends HTMLElement {
    * @function set
    * @returns {void}
    */
-  set dialog (value) {
+  set dialog(value) {
     this.setAttribute('dialog', value)
   }
 
@@ -127,7 +127,7 @@ export class SeStorageDialog extends HTMLElement {
    * @function connectedCallback
    * @returns {void}
    */
-  connectedCallback () {
+  connectedCallback() {
     const onSubmitHandler = (e, action) => {
       const triggerEvent = new CustomEvent('change',
         {

@@ -12,7 +12,7 @@ class MainMenu {
   /**
    * @param {PlainObject} editor svgedit handler
    */
-  constructor (editor) {
+  constructor(editor) {
     this.editor = editor
     /**
      * @type {Integer}
@@ -24,7 +24,7 @@ class MainMenu {
    *
    * @returns {void}
    */
-  hideDocProperties () {
+  hideDocProperties() {
     const $imgDialog = $id('se-img-prop')
     $imgDialog.setAttribute('dialog', 'close')
     $imgDialog.setAttribute('save', this.editor.configObj.pref('img_save'))
@@ -35,7 +35,7 @@ class MainMenu {
    *
    * @returns {void}
    */
-  hidePreferences () {
+  hidePreferences() {
     const $editDialog = $id('se-edit-prefs')
     $editDialog.setAttribute('dialog', 'close')
     this.editor.configObj.preferences = false
@@ -45,7 +45,7 @@ class MainMenu {
    * @param {Event} e
    * @returns {boolean} Whether there were problems saving the document properties
    */
-  saveDocProperties (e) {
+  saveDocProperties(e) {
     // set title
     const { title, w, h, save } = e.detail
     // set document title
@@ -76,7 +76,7 @@ class MainMenu {
    * @function module:SVGthis.savePreferences
    * @returns {Promise<void>}
    */
-  async savePreferences (e) {
+  async savePreferences(e) {
     const {
       lang,
       bgcolor,
@@ -93,7 +93,7 @@ class MainMenu {
     // set language
     if (lang && lang !== this.editor.configObj.pref('lang')) {
       this.editor.configObj.pref('lang', lang)
-      seAlert('Changing the language needs reload')
+      // seAlert('Changing the language needs reload')
     }
 
     // set grid setting
@@ -115,7 +115,7 @@ class MainMenu {
    * @param e
    * @returns {Promise<void>} Resolves to `undefined`
    */
-  async clickExport (e) {
+  async clickExport(e) {
     if (e?.detail?.trigger !== 'ok' || e?.detail?.imgType === undefined) {
       return
     }
@@ -157,7 +157,7 @@ class MainMenu {
    *
    * @returns {void}
    */
-  showDocProperties () {
+  showDocProperties() {
     if (this.editor.docprops) {
       return
     }
@@ -183,7 +183,7 @@ class MainMenu {
    *
    * @returns {void}
    */
-  showPreferences () {
+  showPreferences() {
     if (this.editor.configObj.preferences) {
       return
     }
@@ -215,14 +215,14 @@ class MainMenu {
    *
    * @returns {void}
    */
-  openHomePage () {
+  openHomePage() {
     window.open(homePage, '_blank')
   }
 
   /**
    * @type {module}
    */
-  init () {
+  init() {
     // add Top panel
     const template = document.createElement('template')
     template.innerHTML = `

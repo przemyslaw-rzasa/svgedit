@@ -180,7 +180,6 @@ export default {
      * @returns {void}
      */
     const setupBeforeUnloadListener = () => {
-      return;
       window.addEventListener('beforeunload', function () {
         // Don't save anything unless the user opted in to storage
         if (
@@ -224,8 +223,6 @@ export default {
     return {
       name: 'storage',
       callback() {
-        // Prevent from showing storage dialog
-        return;
         const storagePrompt = new URL(top.location).searchParams.get(
           'storagePrompt'
         )
@@ -261,9 +258,28 @@ export default {
           // Open select-with-checkbox dialog
           // From svg-editor.js
           svgEditor.storagePromptState = 'waiting'
-          const $storageDialog = document.getElementById('se-storage-dialog')
-          $storageDialog.setAttribute('dialog', 'open')
-          $storageDialog.setAttribute('storage', options)
+          const $storageDialog = document.getElementById('se-storage-dialog');
+
+          const forceSavePreferencesLocally = true;
+
+          if (forceSavePreferencesLocally) {
+            console.log('will dispatch', $storageDialog)
+            $storageDialog.dispatchEvent(
+              new CustomEvent(
+                'change',
+                {
+                  detail: {
+                    "trigger": "ok",
+                    "select": "prefsOnly",
+                    "checkbox": true
+                  }
+                }
+              )
+            )
+          } else {
+            $storageDialog.setAttribute('dialog', 'open');
+            $storageDialog.setAttribute('storage', options);
+          }
         } else if (!noStorageOnLoad || forceStorage) {
           setupBeforeUnloadListener()
         }
