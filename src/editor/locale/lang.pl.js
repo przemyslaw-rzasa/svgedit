@@ -105,6 +105,8 @@ export default {
     label: 'etykieta',
     class: 'Klasa elementu',
     serif: 'Szeryfowa',
+    road_sign_normal: 'Znak drogowy',
+    road_sign_condensed: 'Znak drogowy (zagęszczona)',
     sans_serif: 'Bezszeryfowa',
     cursive: 'Kursywa',
     fantasy: 'Fantazyjna',

@@ -99,6 +99,7 @@ const config = [
             }
           },
           { src: 'src/editor/images', dest },
+          { src: 'src/editor/fonts', dest },
           {
             src: 'src/editor/components/jgraduate/images',
             dest: dest.map(d => `${d}/components/jgraduate`)
