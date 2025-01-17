@@ -6,6 +6,7 @@
  */
 
 import { jsPDF as JsPDF } from 'jspdf'
+import { SVG } from '@svgdotjs/svg.js'
 import 'svg2pdf.js'
 import * as history from './history.js'
 import {
@@ -125,7 +126,7 @@ const svgCanvasToString = () => {
  * @param {Integer} indent - Number of spaces to indent this tag
  * @returns {string} The given element as an SVG tag
  */
-const svgToString = (elem, indent) => {
+const svgToString = (elem, indent, root = true) => {
   const curConfig = svgCanvas.getCurConfig()
   const nsMap = svgCanvas.getNsMap()
   const out = []
@@ -317,7 +318,7 @@ const svgToString = (elem, indent) => {
         switch (child.nodeType) {
           case 1: // element node
             out.push('\n')
-            out.push(svgCanvas.svgToString(child, indent))
+            out.push(svgCanvas.svgToString(child, indent, false))
             break
           case 3: {
             // text node
@@ -358,8 +359,56 @@ const svgToString = (elem, indent) => {
       out.push('/>')
     }
   }
+
+  if (root) {
+    return withCustomFonts(out.join(''))
+  }
+
   return out.join('')
 } // end svgToString()
+
+// Example usage with the original fonts
+const fonts = [
+  { name: 'roadsign-normal', url: location.origin + '/fonts/roadsign-normal.ttf' },
+  { name: 'roadsign-condensed', url: location.origin + '/fonts/roadsign-condensed.ttf' }
+]
+
+function withCustomFonts (svgString) {
+  const draw = new SVG(svgString)
+  const textElements = draw.find('text')
+
+  // Filter text elements by font family
+  const fontElements = fonts.reduce((acc, font) => {
+    acc[font.name] = textElements.filter(textElement => textElement.attr('font-family') === font.name)
+    return acc
+  }, {})
+
+  // Find styles by class
+  const styles = draw.find('style')
+  const fontStyles = fonts.reduce((acc, font) => {
+    acc[font.name] = styles.filter(style => style.hasClass(font.name))
+    return acc
+  }, {})
+
+  // Remove unused styles
+  fonts.forEach(font => {
+    if (!fontElements[font.name].length && fontStyles[font.name].length) {
+      fontStyles[font.name].forEach(styleElement => styleElement.remove())
+    }
+  })
+
+  // Add missing styles for used fonts
+  fonts.forEach(font => {
+    if (fontElements[font.name].length && !fontStyles[font.name].length) {
+      const fontface = draw.fontface(font.name, `url(${font.url})`)
+      fontface.addClass(font.name)
+      const style = draw.style(`text[font-family="${font.name}"]`, { 'font-family': font.name })
+      style.addClass(font.name)
+    }
+  })
+
+  return draw.svg()
+}
 
 /**
  * This function sets the current drawing as the input SVG XML.
