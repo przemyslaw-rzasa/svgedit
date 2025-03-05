@@ -421,13 +421,13 @@ hr {
   text-decoration: underline;
 }
 
-input[type=text] {
+/* input[type=text] {
   padding: 2px;
 }
 
 .dropdown {
   position: relative;
-}
+} */
 
 .dropdown button {
   width: 15px;
