@@ -1,6 +1,6 @@
 {
   "name": "svgedit-pl",
-  "version": "7.3.17",
+  "version": "7.3.18",
   "description": "Powerful SVG-Editor for your browser ",
   "main": "dist/editor/Editor.js",
   "module": "dist/editor/Editor.js",
