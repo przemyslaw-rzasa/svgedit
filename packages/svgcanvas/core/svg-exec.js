@@ -665,7 +665,7 @@ const setSvgString = (xmlString, preventUndo) => {
  * arbitrary transform lists, but makes some assumptions about how the transform list
  * was obtained
  */
-const importSvgString = (xmlString, preserveDimension) => {
+const importSvgString = (xmlString, scale) => {
   const dataStorage = svgCanvas.getDataStorage()
   let j
   let ts
@@ -716,10 +716,11 @@ const importSvgString = (xmlString, preserveDimension) => {
         canvash = Number(svgCanvas.getSvgContent().getAttribute('height'))
       // imported content should be 1/3 of the canvas on its largest dimension
 
-      ts =
-        innerh > innerw
-          ? 'scale(' + canvash / 3 / vb[3] + ')'
-          : 'scale(' + canvash / 3 / vb[2] + ')'
+      const defaultScale = innerh > innerw
+        ? 'scale(' + canvash / 3 / vb[3] + ')'
+        : 'scale(' + canvash / 3 / vb[2] + ')'
+
+      ts = Number.isFinite(scale) ? `scale(${scale})` : defaultScale
 
       // Hack to make recalculateDimensions understand how to scale
       ts = 'translate(0) ' + ts + ' translate(0)'
@@ -770,7 +771,7 @@ const importSvgString = (xmlString, preserveDimension) => {
     batchCmd.addSubCommand(new InsertElementCommand(useEl))
     svgCanvas.clearSelection()
 
-    if (!preserveDimension) {
+    if (Number.isFinite(scale)) {
       useEl.setAttribute('transform', ts)
       recalculateDimensions(useEl)
     }
