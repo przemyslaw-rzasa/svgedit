@@ -417,6 +417,7 @@ hr {
   text-decoration: underline;
 }
 
+/* Commented out: conflicts with editor control layout in this fork
 input[type=text] {
   padding: 2px;
 }
@@ -424,6 +425,7 @@ input[type=text] {
 .dropdown {
   position: relative;
 }
+*/
 
 .dropdown button {
   width: 15px;
@@ -624,4 +626,14 @@ ul li.current {
 
 .dropdown li.tool_button {
   width: 24px;
+}
+
+@font-face {
+  font-family: roadsign-normal;
+  src: url(/fonts/roadsign-normal.ttf);
+}
+
+@font-face {
+  font-family: roadsign-condensed;
+  src: url(/fonts/roadsign-condensed.ttf);
 }
