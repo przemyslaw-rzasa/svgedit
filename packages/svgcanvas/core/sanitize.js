@@ -265,20 +265,25 @@ export const sanitizeSvg = (node) => {
       node.remove()
       return
     }
-    // For <use> elements with missing width/height, derive defaults from referenced viewBox/size for proper sizing/selection
+    // For <use> elements with missing width/height, prefer referenced viewport
+    // (width/height) over viewBox so presentation size is preserved.
     if (node.nodeName === 'use') {
       const ref = getRefElem(getHref(node))
       if (ref) {
         const refViewBox = ref.getAttribute('viewBox')
         const viewBoxParts = refViewBox ? refViewBox.split(/[\s,]+/).map(Number) : null
-        const refWidth = Number(ref.getAttribute('width'))
-        const refHeight = Number(ref.getAttribute('height'))
+        const refWidth = Number.parseFloat(ref.getAttribute('width'))
+        const refHeight = Number.parseFloat(ref.getAttribute('height'))
         if (!node.hasAttribute('width')) {
-          const width = viewBoxParts?.[2] || refWidth
+          const width = (Number.isFinite(refWidth) && refWidth > 0)
+            ? refWidth
+            : viewBoxParts?.[2]
           if (width) node.setAttribute('width', width)
         }
         if (!node.hasAttribute('height')) {
-          const height = viewBoxParts?.[3] || refHeight
+          const height = (Number.isFinite(refHeight) && refHeight > 0)
+            ? refHeight
+            : viewBoxParts?.[3]
           if (height) node.setAttribute('height', height)
         }
       }

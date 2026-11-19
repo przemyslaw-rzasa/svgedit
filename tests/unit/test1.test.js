@@ -298,5 +298,48 @@ describe('Basic Module', function () {
         'Transform is finite (got ' + t + ')'
       )
     })
+
+    it('Test setSvgString prefers viewport width/height over viewBox', function () {
+      const ok = svgCanvas.setSvgString(
+        '<svg xmlns="' + svgns + '" width="90" height="79.52661" viewBox="0 0 67.5 59.64">' +
+          '<rect width="67.5" height="59.64" fill="red"/>' +
+        '</svg>'
+      )
+      assert.equal(ok, true, 'Expected setSvgString to succeed')
+      assert.closeTo(svgCanvas.contentW, 90, 0.001)
+      assert.closeTo(svgCanvas.contentH, 79.52661, 0.001)
+      const res = svgCanvas.getResolution()
+      assert.closeTo(res.w, 90, 0.001)
+      assert.closeTo(res.h, 79.52661, 0.001)
+    })
+
+    it('Test setSvgString converts viewport units instead of using raw viewBox', function () {
+      const ok = svgCanvas.setSvgString(
+        '<svg xmlns="' + svgns + '" width="67.5pt" height="59.64pt" viewBox="0 0 67.5 59.64">' +
+          '<rect width="67.5" height="59.64" fill="red"/>' +
+        '</svg>'
+      )
+      assert.equal(ok, true, 'Expected setSvgString to succeed')
+      // 1pt = 1/72in; at 96css-px/in => * 96/72 = * 4/3
+      assert.closeTo(svgCanvas.contentW, 90, 0.05)
+      assert.closeTo(svgCanvas.contentH, 79.52, 0.05)
+    })
+
+    it('Test importSvgString sizes <use> from viewport, not viewBox', function () {
+      svgCanvas.setSvgString(
+        '<svg width="640" height="480" xmlns="' + svgns + '">' +
+          '<g><title>Layer 1</title></g>' +
+        '</svg>'
+      )
+      const imported = svgCanvas.importSvgString(
+        '<svg xmlns="' + svgns + '" width="90" height="79.52661" viewBox="0 0 67.5 59.64">' +
+          '<rect width="67.5" height="59.64" fill="yellow"/>' +
+        '</svg>',
+        true // preserveDimension: avoid canvas fit-scaling in this assertion
+      )
+      assert.equal((imported && imported.nodeName), 'use', 'Imported as a <use> element')
+      assert.closeTo(Number(imported.getAttribute('width')), 90, 0.001)
+      assert.closeTo(Number(imported.getAttribute('height')), 79.52661, 0.001)
+    })
   })
 })
