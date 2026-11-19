@@ -23,18 +23,30 @@ class TopPanel {
   /**
    * @type {module}
    */
-  displayTool (className) {
-    // default display is 'none' so removing the property will make the panel visible
-    $qa(`.${className}`).map(el => el.style.removeProperty('display'))
+  displayTool (name) {
+    // Panels use CSS classes; individual tools (e.g. tool_topath) use element ids.
+    const byClass = $qa(`.${name}`)
+    if (byClass.length) {
+      byClass.forEach(el => el.style.removeProperty('display'))
+      return
+    }
+    const byId = $id(name)
+    if (byId) byId.style.removeProperty('display')
   }
 
   /**
    * @type {module}
    */
-  hideTool (className) {
-    $qa(`.${className}`).forEach(el => {
-      el.style.display = 'none'
-    })
+  hideTool (name) {
+    const byClass = $qa(`.${name}`)
+    if (byClass.length) {
+      byClass.forEach(el => {
+        el.style.display = 'none'
+      })
+      return
+    }
+    const byId = $id(name)
+    if (byId) byId.style.display = 'none'
   }
 
   /**
