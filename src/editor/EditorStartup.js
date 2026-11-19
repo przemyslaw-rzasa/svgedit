@@ -613,7 +613,9 @@ class EditorStartup {
     this.enableOrDisableClipboard()
 
     window.addEventListener('beforeunload', function (e) {
-    // Suppress warning if page is empty
+      // Fork: skip unsaved-changes leave warning (prefs auto-saved via storage extension)
+      return
+      // Suppress warning if page is empty
       if (undoMgr.getUndoStackSize() === 0) {
         this.showSaveWarning = false
       }

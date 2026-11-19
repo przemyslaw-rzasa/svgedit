@@ -259,8 +259,27 @@ export default {
           // From svg-editor.js
           svgEditor.storagePromptState = 'waiting'
           const $storageDialog = document.getElementById('se-storage-dialog')
-          $storageDialog.setAttribute('dialog', 'open')
-          $storageDialog.setAttribute('storage', options)
+
+          // Auto-opt into saving preferences locally (skip storage prompt modal)
+          const forceSavePreferencesLocally = true
+
+          if (forceSavePreferencesLocally) {
+            $storageDialog.dispatchEvent(
+              new CustomEvent(
+                'change',
+                {
+                  detail: {
+                    trigger: 'ok',
+                    select: 'prefsOnly',
+                    checkbox: true
+                  }
+                }
+              )
+            )
+          } else {
+            $storageDialog.setAttribute('dialog', 'open')
+            $storageDialog.setAttribute('storage', options)
+          }
         } else if (!noStorageOnLoad || forceStorage) {
           setupBeforeUnloadListener()
         }

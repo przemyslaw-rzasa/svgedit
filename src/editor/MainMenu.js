@@ -93,7 +93,7 @@ class MainMenu {
     // set language
     if (lang && lang !== this.editor.configObj.pref('lang')) {
       this.editor.configObj.pref('lang', lang)
-      seAlert('Changing the language needs reload')
+      // seAlert('Changing the language needs reload')
     }
 
     // set grid setting
