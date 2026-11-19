@@ -74,6 +74,28 @@ export default {
       if (file.type.includes('svg')) {
         reader = new FileReader()
         reader.onloadend = (ev) => {
+          // First drop onto a pristine document loads (replaces) the SVG and
+          // zooms to fit. Later drops / Import still insert into the current doc.
+          const isDrop = e.type === 'drop'
+          const isPristine = this.svgCanvas.undoMgr.getUndoStackSize() === 0
+          if (isDrop && isPristine) {
+            try {
+              this.loadSvgString(ev.target.result)
+              this.topPanel.updateTitle(file.name)
+              this.layersPanel.populateLayers()
+              this.svgCanvas.runExtensions('onOpenedDocument', {
+                name: file.name,
+                lastModified: file.lastModified,
+                size: file.size,
+                type: file.type
+              })
+            } catch (_err) {
+              // loadSvgString already alerts on failure
+            }
+            $id('se-prompt-dialog').setAttribute('close', true)
+            resetFileInput()
+            return
+          }
           // imgImport.shiftKey (shift key pressed or not) will determine if import should preserve dimension)
           const newElement = this.svgCanvas.importSvgString(ev.target.result, imgImport.shiftKey)
           this.svgCanvas.alignSelectedElements('m', 'page')
@@ -146,7 +168,8 @@ export default {
       svgEditor.svgCanvas.clear()
       svgEditor.svgCanvas.setResolution(x, y)
       svgEditor.updateCanvas(true)
-      svgEditor.zoomImage()
+      // Same as load: fit the blank canvas to the workarea.
+      svgEditor.zoomChanged(window, 'canvas', true)
       svgEditor.layersPanel.populateLayers()
       svgEditor.topPanel.updateContextPanel()
       svgEditor.topPanel.updateTitle('bez_tytulu.svg')
@@ -169,7 +192,6 @@ export default {
         })
         const svgContent = await blob.text()
         await svgEditor.loadSvgString(svgContent)
-        svgEditor.updateCanvas()
         handle = blob.handle
         svgEditor.topPanel.updateTitle(blob.name)
         svgEditor.svgCanvas.runExtensions('onOpenedDocument', {

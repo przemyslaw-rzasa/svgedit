@@ -336,6 +336,8 @@ class Editor extends EditorStartup {
     const success = this.svgCanvas.setSvgString(str) !== false
     if (success) {
       this.updateCanvas()
+      // Fit the loaded document to the workarea so it fills most of the screen.
+      this.zoomChanged(window, 'canvas', true)
       return
     }
     if (!noAlert) seAlert(this.i18next.t('notification.errorLoadingSVG'))
