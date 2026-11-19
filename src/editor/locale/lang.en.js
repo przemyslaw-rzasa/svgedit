@@ -104,6 +104,8 @@ export default {
     class_label: 'class',
     label: 'label',
     class: 'Element class',
+    road_sign_normal: 'Road sign',
+    road_sign_condensed: 'Road sign (condensed)',
     serif: 'Serif',
     sans_serif: 'Sans-serif',
     cursive: 'Cursive',

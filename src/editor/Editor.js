@@ -55,7 +55,7 @@ class Editor extends EditorStartup {
     /**
      * document title
      */
-    this.title = 'untitled.svg'
+    this.title = 'bez_tytulu.svg'
 
     this.svgCanvas = null
     this.$click = $click

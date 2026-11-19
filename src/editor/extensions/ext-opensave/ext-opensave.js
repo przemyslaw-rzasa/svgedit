@@ -149,7 +149,7 @@ export default {
       svgEditor.zoomImage()
       svgEditor.layersPanel.populateLayers()
       svgEditor.topPanel.updateContextPanel()
-      svgEditor.topPanel.updateTitle('untitled.svg')
+      svgEditor.topPanel.updateTitle('bez_tytulu.svg')
     }
 
     /**
@@ -235,7 +235,7 @@ export default {
           if (type === 'save' && handle !== null) {
             const throwIfExistingHandleNotGood = false
             handle = await fileSave(blob, {
-              fileName: 'untitled.svg',
+              fileName: 'bez_tytulu.svg',
               extensions: ['.svg']
             }, handle, throwIfExistingHandleNotGood)
           } else {

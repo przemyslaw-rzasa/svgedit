@@ -96,7 +96,7 @@ export default {
       const cached = storage.getItem(key)
       if (cached) {
         svgEditor.loadFromString(cached)
-        const name = storage.getItem(`title-${key}`) ?? 'untitled.svg'
+        const name = storage.getItem(`title-${key}`) ?? 'bez_tytulu.svg'
         svgEditor.topPanel.updateTitle(name)
         svgEditor.layersPanel.populateLayers()
       }

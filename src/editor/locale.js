@@ -63,9 +63,9 @@ export const putLocale = async function (givenParam, goodLangs) {
     langParam = navigator.language
   }
 
-  // Set to English if language is not in list of good langs
+  // Set to Polish if language is not in list of good langs
   if (!goodLangs.includes(langParam) && langParam !== 'test') {
-    langParam = 'en'
+    langParam = 'pl'
   }
   const module = await import(`./locale/lang.${encodeURIComponent(langParam)}.js`)
   i18next.init({
