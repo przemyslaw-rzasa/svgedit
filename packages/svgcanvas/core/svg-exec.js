@@ -711,8 +711,7 @@ const setSvgString = (xmlString, preventUndo) => {
  */
 const importSvgString = (xmlString, preserveDimension, doNotUseExisting) => {
   const dataStorage = svgCanvas.getDataStorage()
-  let j
-  let ts
+  let ts = ''
   let useEl
   try {
     // Get unique ID
@@ -730,7 +729,7 @@ const importSvgString = (xmlString, preserveDimension, doNotUseExisting) => {
     let symbol
     if (useExisting && !doNotUseExisting) {
       symbol = svgCanvas.getImportIds(uid).symbol
-      ts = svgCanvas.getImportIds(uid).xform
+      ts = svgCanvas.getImportIds(uid).xform || ''
     } else {
       // convert string into XML document
       const newDoc = text2xml(xmlString)
@@ -745,37 +744,9 @@ const importSvgString = (xmlString, preserveDimension, doNotUseExisting) => {
 
       svgCanvas.uniquifyElems(svg)
 
-      const innerw = convertToNum('width', svg.getAttribute('width'))
-      const innerh = convertToNum('height', svg.getAttribute('height'))
-      const innervb = svg.getAttribute('viewBox')
-      // if no explicit viewbox, create one out of the width and height
-      const vb = innervb ? innervb.split(/[ ,]+/) : [0, 0, innerw, innerh]
-      for (j = 0; j < 4; ++j) {
-        vb[j] = Number(vb[j])
-      }
-
       // TODO: properly handle preserveAspectRatio
-      const // canvasw = +svgContent.getAttribute('width'),
-        rawCanvash = Number(svgCanvas.getSvgContent().getAttribute('height'))
-      const canvash =
-        Number.isFinite(rawCanvash) && rawCanvash > 0
-          ? rawCanvash
-          : (Number(svgCanvas.getCurConfig().dimensions?.[1]) || 100)
-      // imported content should be 1/3 of the canvas on its largest dimension
-
-      const vbWidth = vb[2]
-      const vbHeight = vb[3]
-      const importW = Number.isFinite(vbWidth) && vbWidth > 0 ? vbWidth : (innerw > 0 ? innerw : 100)
-      const importH = Number.isFinite(vbHeight) && vbHeight > 0 ? vbHeight : (innerh > 0 ? innerh : 100)
-      const safeImportW = Number.isFinite(importW) && importW > 0 ? importW : 100
-      const safeImportH = Number.isFinite(importH) && importH > 0 ? importH : 100
-      ts =
-        safeImportH > safeImportW
-          ? 'scale(' + canvash / 3 / safeImportH + ')'
-          : 'scale(' + canvash / 3 / safeImportW + ')'
-
-      // Hack to make recalculateDimensions understand how to scale
-      ts = `translate(0) ${ts} translate(0)`
+      // Scaling is decided after insert via getBBox()/attrs vs getResolution() (fork).
+      ts = ''
 
       symbol = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'symbol')
       const defs = findDefs()
@@ -823,9 +794,55 @@ const importSvgString = (xmlString, preserveDimension, doNotUseExisting) => {
     batchCmd.addSubCommand(new InsertElementCommand(useEl))
     svgCanvas.clearSelection()
 
+    // Fork: downscale only when the imported instance exceeds the current document size.
     if (!preserveDimension) {
-      useEl.setAttribute('transform', ts)
-      recalculateDimensions(useEl)
+      if (!(useExisting && !doNotUseExisting)) {
+        ts = ''
+        const { w: canvasw, h: canvash } = svgCanvas.getResolution()
+        let importW = 0
+        let importH = 0
+        try {
+          const bbox = useEl.getBBox()
+          importW = bbox.width
+          importH = bbox.height
+        } catch (_err) {
+          // getBBox can throw for empty/invalid imported content
+        }
+        // Fallback when <use>/<symbol> reports an empty bbox: use root attrs/viewBox.
+        if (!(importW > 0 && importH > 0)) {
+          const symW = convertToNum('width', symbol.getAttribute('width'))
+          const symH = convertToNum('height', symbol.getAttribute('height'))
+          const symVb = symbol.getAttribute('viewBox')
+          const vbParts = symVb ? symVb.split(/[ ,]+/).map(Number) : null
+          importW = (Number.isFinite(symW) && symW > 0)
+            ? symW
+            : (vbParts && Number.isFinite(vbParts[2]) && vbParts[2] > 0 ? vbParts[2] : 0)
+          importH = (Number.isFinite(symH) && symH > 0)
+            ? symH
+            : (vbParts && Number.isFinite(vbParts[3]) && vbParts[3] > 0 ? vbParts[3] : 0)
+        }
+        if (
+          importW > 0 && importH > 0 &&
+          Number.isFinite(canvasw) && canvasw > 0 &&
+          Number.isFinite(canvash) && canvash > 0 &&
+          (importW > canvasw || importH > canvash)
+        ) {
+          const scaleFactor = Math.min(canvasw / importW, canvash / importH)
+          // Hack to make recalculateDimensions understand how to scale
+          ts = `translate(0) scale(${scaleFactor}) translate(0)`
+        }
+        const imported = svgCanvas.getImportIds(uid)
+        if (imported) {
+          svgCanvas.setImportIds(uid, {
+            symbol: imported.symbol,
+            xform: ts
+          })
+        }
+      }
+      if (ts) {
+        useEl.setAttribute('transform', ts)
+        recalculateDimensions(useEl)
+      }
     }
     dataStorage.put(useEl, 'symbol', symbol)
     dataStorage.put(useEl, 'ref', symbol)
