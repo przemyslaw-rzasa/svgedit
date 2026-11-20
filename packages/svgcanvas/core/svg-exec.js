@@ -596,40 +596,31 @@ const setSvgString = (xmlString, preventUndo) => {
 
     let percs = false
 
-    // Prefer real viewport (width/height, with unit conversion) over viewBox.
-    // viewBox is only a fallback when viewport attrs are missing or percentage-based.
-    const viBox = content.getAttribute('viewBox')
-    const vbParts = viBox ? viBox.trim().split(/[ ,]+/).map(Number) : null
-    const vbX = vbParts && Number.isFinite(vbParts[0]) ? vbParts[0] : 0
-    const vbY = vbParts && Number.isFinite(vbParts[1]) ? vbParts[1] : 0
-    const vbWidth = vbParts && Number.isFinite(vbParts[2]) && vbParts[2] > 0
-      ? vbParts[2]
-      : null
-    const vbHeight = vbParts && Number.isFinite(vbParts[3]) && vbParts[3] > 0
-      ? vbParts[3]
-      : null
-
-    const parseViewportDim = (dim, vbVal) => {
-      const val = content.getAttribute(dim)
-      if (val == null || val === '') {
-        if (vbVal != null) return vbVal
-        percs = true
-        return null
+    // determine proper size
+    if (content.getAttribute('viewBox')) {
+      const viBox = content.getAttribute('viewBox')
+      const vb = viBox.split(/[ ,]+/)
+      const vbWidth = Number(vb[2])
+      const vbHeight = Number(vb[3])
+      if (Number.isFinite(vbWidth)) {
+        attrs.width = vbWidth
       }
-      if (String(val).trim().slice(-1) === '%') {
-        percs = true
-        // Keep viewBox size as interim fallback until bbox resolution.
-        return vbVal
+      if (Number.isFinite(vbHeight)) {
+        attrs.height = vbHeight
       }
-      const num = convertToNum(dim, val)
-      if (Number.isFinite(num) && num > 0) return num
-      if (vbVal != null) return vbVal
-      percs = true
-      return null
+      // handle content that doesn't have a viewBox
+    } else {
+      ;['width', 'height'].forEach(dim => {
+        // Set to 100 if not given
+        const val = content.getAttribute(dim) || '100%'
+        if (String(val).slice(-1) === '%') {
+          // Use user units if percentage given
+          percs = true
+        } else {
+          attrs[dim] = convertToNum(dim, val)
+        }
+      })
     }
-
-    attrs.width = parseViewportDim('width', vbWidth)
-    attrs.height = parseViewportDim('height', vbHeight)
 
     // identify layers
     draw.identifyLayers()
@@ -649,11 +640,15 @@ const setSvgString = (xmlString, preventUndo) => {
     if (percs) {
       const bb = getStrokedBBoxDefaultVisible()
       if (bb && typeof bb === 'object') {
-        if (attrs.width == null) attrs.width = bb.width + bb.x
-        if (attrs.height == null) attrs.height = bb.height + bb.y
+        attrs.width = bb.width + bb.x
+        attrs.height = bb.height + bb.y
       } else {
-        if (attrs.width == null) attrs.width = 100
-        if (attrs.height == null) attrs.height = 100
+        if (attrs.width === null || attrs.width === undefined) {
+          attrs.width = 100
+        }
+        if (attrs.height === null || attrs.height === undefined) {
+          attrs.height = 100
+        }
       }
     }
 
@@ -664,36 +659,6 @@ const setSvgString = (xmlString, preventUndo) => {
     }
     if (!Number.isFinite(attrs.height) || attrs.height <= 0) {
       attrs.height = 100
-    }
-
-    // SVG-Edit works in a flat coordinate space where viewBox matches width/height
-    // at zoom=1. When the source viewport differs from viewBox, remap content from
-    // viewBox space into viewport (px) space before setZoom resets viewBox.
-    if (vbWidth != null && vbHeight != null) {
-      const sx = attrs.width / vbWidth
-      const sy = attrs.height / vbHeight
-      const needsRemap =
-        Math.abs(vbX) > 1e-9 ||
-        Math.abs(vbY) > 1e-9 ||
-        Math.abs(sx - 1) > 1e-9 ||
-        Math.abs(sy - 1) > 1e-9
-      if (needsRemap) {
-        const nonGraphics = new Set([
-          'defs', 'metadata', 'title', 'desc', 'style', 'script',
-          'linearGradient', 'radialGradient', 'pattern', 'marker',
-          'clipPath', 'mask', 'filter', 'symbol'
-        ])
-        const prefix = `scale(${sx},${sy}) translate(${-vbX},${-vbY})`
-        Array.prototype.forEach.call(content.children, kid => {
-          if (nonGraphics.has(kid.nodeName)) return
-          const existing = kid.getAttribute('transform')
-          kid.setAttribute(
-            'transform',
-            existing ? `${prefix} ${existing}` : prefix
-          )
-          recalculateDimensions(kid)
-        })
-      }
     }
 
     for (const [key, value] of Object.entries(attrs)) {
@@ -822,32 +787,6 @@ const importSvgString = (xmlString, preserveDimension, doNotUseExisting) => {
     useEl = svgCanvas.getDOMDocument().createElementNS(NS.SVG, 'use')
     useEl.id = svgCanvas.getNextId()
     svgCanvas.setHref(useEl, '#' + symbol.id)
-
-    // Size the <use> from the source viewport (width/height), falling back to viewBox.
-    // This preserves real presentation size when viewport and viewBox differ.
-    const parseImportDim = (dim, attrVal, vbVal) => {
-      if (attrVal != null && attrVal !== '' && String(attrVal).trim().slice(-1) !== '%') {
-        const num = convertToNum(dim, attrVal)
-        if (Number.isFinite(num) && num > 0) return num
-      }
-      if (Number.isFinite(vbVal) && vbVal > 0) return vbVal
-      return null
-    }
-    const symVb = symbol.getAttribute('viewBox')
-    const symVbParts = symVb ? symVb.trim().split(/[ ,]+/).map(Number) : null
-    const importViewportW = parseImportDim(
-      'width',
-      symbol.getAttribute('width'),
-      symVbParts?.[2]
-    )
-    const importViewportH = parseImportDim(
-      'height',
-      symbol.getAttribute('height'),
-      symVbParts?.[3]
-    )
-    if (importViewportW != null) useEl.setAttribute('width', importViewportW)
-    if (importViewportH != null) useEl.setAttribute('height', importViewportH)
-
     ;(
       svgCanvas.getCurrentGroup() ||
       svgCanvas.getCurrentDrawing().getCurrentLayer()
@@ -860,16 +799,27 @@ const importSvgString = (xmlString, preserveDimension, doNotUseExisting) => {
       if (!(useExisting && !doNotUseExisting)) {
         ts = ''
         const { w: canvasw, h: canvash } = svgCanvas.getResolution()
-        let importW = importViewportW || 0
-        let importH = importViewportH || 0
+        let importW = 0
+        let importH = 0
+        try {
+          const bbox = useEl.getBBox()
+          importW = bbox.width
+          importH = bbox.height
+        } catch (_err) {
+          // getBBox can throw for empty/invalid imported content
+        }
+        // Fallback when <use>/<symbol> reports an empty bbox: use root attrs/viewBox.
         if (!(importW > 0 && importH > 0)) {
-          try {
-            const bbox = useEl.getBBox()
-            importW = bbox.width
-            importH = bbox.height
-          } catch (_err) {
-            // getBBox can throw for empty/invalid imported content
-          }
+          const symW = convertToNum('width', symbol.getAttribute('width'))
+          const symH = convertToNum('height', symbol.getAttribute('height'))
+          const symVb = symbol.getAttribute('viewBox')
+          const vbParts = symVb ? symVb.split(/[ ,]+/).map(Number) : null
+          importW = (Number.isFinite(symW) && symW > 0)
+            ? symW
+            : (vbParts && Number.isFinite(vbParts[2]) && vbParts[2] > 0 ? vbParts[2] : 0)
+          importH = (Number.isFinite(symH) && symH > 0)
+            ? symH
+            : (vbParts && Number.isFinite(vbParts[3]) && vbParts[3] > 0 ? vbParts[3] : 0)
         }
         if (
           importW > 0 && importH > 0 &&
