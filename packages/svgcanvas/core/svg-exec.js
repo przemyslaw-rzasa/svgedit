@@ -596,31 +596,28 @@ const setSvgString = (xmlString, preventUndo) => {
 
     let percs = false
 
-    // determine proper size
-    if (content.getAttribute('viewBox')) {
-      const viBox = content.getAttribute('viewBox')
-      const vb = viBox.split(/[ ,]+/)
-      const vbWidth = Number(vb[2])
-      const vbHeight = Number(vb[3])
-      if (Number.isFinite(vbWidth)) {
-        attrs.width = vbWidth
-      }
-      if (Number.isFinite(vbHeight)) {
-        attrs.height = vbHeight
-      }
-      // handle content that doesn't have a viewBox
-    } else {
-      ;['width', 'height'].forEach(dim => {
-        // Set to 100 if not given
-        const val = content.getAttribute(dim) || '100%'
-        if (String(val).slice(-1) === '%') {
-          // Use user units if percentage given
-          percs = true
-        } else {
-          attrs[dim] = convertToNum(dim, val)
+    // Prefer absolute width/height (viewport); fall back to viewBox, then %.
+    const vbAttr = content.getAttribute('viewBox')
+    const vbParts = vbAttr ? vbAttr.trim().split(/[ ,]+/).map(Number) : null
+    const vb = (vbParts && vbParts[2] > 0 && vbParts[3] > 0)
+      ? {
+          x: Number.isFinite(vbParts[0]) ? vbParts[0] : 0,
+          y: Number.isFinite(vbParts[1]) ? vbParts[1] : 0,
+          w: vbParts[2],
+          h: vbParts[3]
         }
-      })
-    }
+      : null
+
+    ;['width', 'height'].forEach(dim => {
+      const val = content.getAttribute(dim)
+      if (val && String(val).slice(-1) !== '%') {
+        attrs[dim] = convertToNum(dim, val)
+      } else if (vb) {
+        attrs[dim] = dim === 'width' ? vb.w : vb.h
+      } else {
+        percs = true
+      }
+    })
 
     // identify layers
     draw.identifyLayers()
@@ -660,6 +657,29 @@ const setSvgString = (xmlString, preventUndo) => {
     if (!Number.isFinite(attrs.height) || attrs.height <= 0) {
       attrs.height = 100
     }
+
+    // When viewport ≠ viewBox, scale content into viewport space. Apply to
+    // layer children only — never the layer — so imports don't inherit scale.
+    if (vb) {
+      const sx = attrs.width / vb.w
+      const sy = attrs.height / vb.h
+      if (
+        Math.abs(vb.x) > 1e-9 || Math.abs(vb.y) > 1e-9 ||
+        Math.abs(sx - 1) > 1e-9 || Math.abs(sy - 1) > 1e-9
+      ) {
+        const xform = `translate(0) scale(${sx},${sy}) translate(${-vb.x},${-vb.y})`
+        content.querySelectorAll('g.layer').forEach(layer => {
+          Array.from(layer.children).forEach(el => {
+            if (el.nodeName === 'title') return
+            const prev = el.getAttribute('transform')
+            el.setAttribute('transform', prev ? `${xform} ${prev}` : xform)
+            recalculateDimensions(el)
+          })
+        })
+      }
+    }
+
+    attrs.viewBox = `0 0 ${attrs.width} ${attrs.height}`
 
     for (const [key, value] of Object.entries(attrs)) {
       content.setAttribute(key, value)

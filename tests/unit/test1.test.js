@@ -131,6 +131,50 @@ describe('Basic Module', function () {
       )
     })
 
+    it('Test setSvgString prefers viewport over viewBox and keeps layer clean', function () {
+      const ok = svgCanvas.setSvgString(
+        '<svg xmlns="' + svgns + '" width="90" height="80" viewBox="0 0 67.5 60">' +
+          '<rect id="vb-rect" width="67.5" height="60"/>' +
+        '</svg>'
+      )
+      assert.equal(ok, true)
+      assert.equal(svgCanvas.contentW, 90)
+      assert.equal(svgCanvas.contentH, 80)
+
+      const layer = document.querySelector('#svgcontent g.layer')
+      assert.ok(layer)
+      assert.equal(layer.getAttribute('transform'), null)
+
+      const rect = document.getElementById('vb-rect')
+      const remapped =
+        Math.abs(Number(rect.getAttribute('width')) - 90) < 0.01 ||
+        /scale\(/i.test(rect.getAttribute('transform') || '')
+      assert.equal(remapped, true)
+
+      // Import into remapped doc must not inherit a layer scale / gain use viewport attrs.
+      const imported = svgCanvas.importSvgString(
+        '<svg xmlns="' + svgns + '" width="90" height="80" viewBox="0 0 67.5 60">' +
+          '<rect width="67.5" height="60"/>' +
+        '</svg>',
+        true
+      )
+      assert.equal(imported.nodeName, 'use')
+      assert.equal(imported.parentNode.getAttribute('transform'), null)
+      assert.equal(imported.hasAttribute('width'), false)
+      assert.equal(imported.hasAttribute('height'), false)
+    })
+
+    it('Test setSvgString falls back to viewBox when width/height missing', function () {
+      const ok = svgCanvas.setSvgString(
+        '<svg xmlns="' + svgns + '" viewBox="0 0 67.5 59.64645">' +
+          '<rect width="67.5" height="59.64645"/>' +
+        '</svg>'
+      )
+      assert.equal(ok, true)
+      assert.equal(svgCanvas.contentW, 67.5)
+      assert.equal(svgCanvas.contentH, 59.64645)
+    })
+
     it('Test import use', function () {
       svgCanvas.setSvgString(
         "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='400' x='300'>" +
